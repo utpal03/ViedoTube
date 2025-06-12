@@ -1,7 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import bycrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
 
 const userSchema = new Schema(
   {
@@ -60,14 +59,14 @@ userSchema.pre("save", async function (next) {
     return next();
   }
   try {
-    this.password = await bycrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 10);
     next();
   } catch (error) {
     next(error);
   }
 });
 userSchema.methods.comparePassword = async function (password) {
-  return await bycrypt.compare(password, this.password);
+  return await bcrypt.compare(password, this.password);
 };
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
