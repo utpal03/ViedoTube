@@ -1,9 +1,9 @@
 {
-  "name": "viedoplayer",
+  "name": "videoplayer",
   "version": "1.0.0",
-  "description": "This is a viedoplayer where one can upload and watch the viedos aswell",
+  "description": "This is a videoplayer where one can upload and watch the videos aswell",
   "keywords": [
-    "viedoplayer",
+    "videoplayer",
     "javascript"
   ],
   "license": "ISC",
