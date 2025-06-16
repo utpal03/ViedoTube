@@ -1,28 +1,37 @@
-import { asyncHandler } from "../utils/asyncHandler";
-import { User } from "../models/users.model";
+import {asyncHandler} from "../utils/asyncHandler.js"
+import { User } from "../models/users.model.js";
+import { userDAO } from "../dao/user.dao.js";
+import jwt from "jsonwebtoken";
+
 
 const verifyJwt = asyncHandler(async (req, res, next) => {
   try {
     const token =
       req.cookies?.accessToken ||
-      req.headers("Authorization")?.replace("Bearer ", "");
+      req.headers?.authorization?.replace("Bearer ", "");
+
     if (!token) {
       throw new Error("You are not authorized to access this resource");
     }
 
-    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    await User.findById(decodedToken._id).select("-password -refreshToken");
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded._id).select(
+      "-password -refreshToken"
+    );
 
     if (!user) {
-      throw new Error("invalid token");
+      throw new Error("Invalid token");
     }
+
     req.user = user;
     next();
   } catch (error) {
     console.error("Authentication error:", error.message);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
-      message: "You are not authorized to access this resource",
+      message: "Unauthorized",
     });
   }
 });
+
+export { verifyJwt };
