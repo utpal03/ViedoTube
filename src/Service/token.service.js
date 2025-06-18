@@ -1,16 +1,36 @@
-import RefreshToken from "../models/tokens.model.js";
+import jwt from "jsonwebtoken"
 
-const generateAccessToken = (user) => RefreshToken.generateAccessToken(user);
+const generateAccessToken = (user) => {
+  return jwt.sign(
+    {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      fullname: user.fullname,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1d",
+    }
+  );
+};
 
-const generateRefreshToken = (user) => RefreshToken.generateRefreshToken(user);
-
-const storeToken = async (userId, refreshToken) => {
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  await RefreshToken.create({ user: userId, token: refreshToken, expiresAt });
+const generateRefreshToken = (user) => {
+  return jwt.sign(
+    {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      fullname: user.fullname,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "30d",
+    }
+  );
 };
 
 export const tokenService = {
   generateAccessToken,
   generateRefreshToken,
-  storeToken,
 };

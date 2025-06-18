@@ -47,36 +47,6 @@ const refreshTokenSchema = new Schema(
   { timestamps: true }
 );
 
-refreshTokenSchema.statics.generateAccessToken = function (user) {
-  return jwt.sign(
-    {
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      fullname: user.fullname,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "1d",
-    }
-  );
-};
-
-refreshTokenSchema.statics.generateRefreshToken = function (user) {
-  return jwt.sign(
-    {
-      _id: user._id,
-      username: user.username,
-      email: user.email,
-      fullname: user.fullname,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "30d",
-    }
-  );
-};
-
 const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
 
 export default RefreshToken;

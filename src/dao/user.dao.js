@@ -13,22 +13,6 @@ const findByEmail = async (email) => {
   return await User.findOne({ email: email.trim().toLowerCase() });
 };
 
-const updateRefreshToken = async (userId, refreshToken) => {
-  return await User.findByIdAndUpdate(
-    userId,
-    { $set: { refreshToken } },
-    { new: true }
-  );
-};
-
-const clearRefreshToken = async (userId) => {
-  return await User.findByIdAndUpdate(
-    userId,
-    { $unset: { refreshToken: "" } },
-    { new: true }
-  );
-};
-
 const isPasswordMatching = async function (user, password) {
   return await bcrypt.compare(password, user.password);
 };
@@ -43,11 +27,9 @@ const updatePassword = async (userId, hashedPassword) => {
 
 export const userDAO = {
   findByEmail,
-  updateRefreshToken,
   findByEmailOrUsername,
   create,
   getPublicUserById,
-  clearRefreshToken,
   isPasswordMatching,
-  updatePassword
+  updatePassword,
 };

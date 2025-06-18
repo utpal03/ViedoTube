@@ -1,6 +1,5 @@
 import {asyncHandler} from "../utils/asyncHandler.js"
 import { User } from "../models/users.model.js";
-import { userDAO } from "../dao/user.dao.js";
 import jwt from "jsonwebtoken";
 
 

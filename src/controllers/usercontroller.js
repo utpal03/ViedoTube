@@ -54,8 +54,6 @@ const logoutUser = asyncHandler(async (req, res) => {
   const cookieOptions = {
     httpOnly: true,
     secure: true,
-    sameSite: "Strict",
-    path: "/",
   };
 
   return res
@@ -68,4 +66,18 @@ const logoutUser = asyncHandler(async (req, res) => {
     });
 });
 
-export { registerUser, loginUser, logoutUser, forgetPassword, resetPassword };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const token = req.body.refreshToken || req.cookie.refreshToken;
+  const accessToken = await userService.refreshAccessToken(token);
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res.status(200).cookie("accessToken", accessToken, options).json({
+    status: "success",
+    message: "newAccessToken received",
+  });
+});
+
+export { registerUser, loginUser, logoutUser, forgetPassword, resetPassword, refreshAccessToken };

@@ -5,6 +5,8 @@ import { tokenService } from "./token.service.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
+import { User } from "../models/users.model.js";
+import { refreshtokendao } from "../dao/refreshtoken.dao.js";
 
 const register = async ({ fullname, email, password, username }, files) => {
   if ([fullname, email, password].some((f) => !f?.trim())) {
@@ -48,7 +50,7 @@ const login = async ({ email, password }) => {
   const accessToken = tokenService.generateAccessToken(user);
   const refreshToken = tokenService.generateRefreshToken(user);
 
-  await tokenService.storeToken(user._id, refreshToken);
+  await refreshtokendao.storeToken(user._id, refreshToken);
 
   const publicUser = await userDAO.getPublicUserById(user._id);
 
@@ -104,8 +106,31 @@ const resetPassword = async (token, newPassword) => {
   }
   const hashedPassword = await bcrypt.hash(newPassword, 10);
   await userDAO.updatePassword(user._id, hashedPassword);
-
-  return { message: "Password reset successful" };
 };
 
-export const userService = { register, login, forgetPassword,resetPassword};
+const refreshAccessToken = async (token) => {
+  if (!token) {
+    throw ApiError(401, "unauthorized request");
+  }
+
+  const decodedtoken = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+  const user = await User.findById(decodedtoken?._id);
+
+  if (!user) {
+    throw new ApiError(401, "Invalid refresh-token");
+  }
+  const savedToken = await refreshtokendao.findRefreshTokenByUserId(user._id);
+  if (!savedToken || savedToken.token !== token) {
+    throw new ApiError(401, "Refresh token is invalid or has been revoked");
+  }
+  const newAccessToken = tokenService.generateAccessToken(user);
+  return newAccessToken;
+};
+
+export const userService = {
+  register,
+  login,
+  forgetPassword,
+  resetPassword,
+  refreshAccessToken,
+};
