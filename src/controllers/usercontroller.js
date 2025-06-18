@@ -29,6 +29,25 @@ const loginUser = asyncHandler(async (req, res) => {
     });
 });
 
+const forgetPassword = asyncHandler(async (req, res) => {
+  await userService.forgetPassword(req.body);
+  return res.status(200).json({
+    status: "sucess",
+    message: "password link send to your email",
+  });
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const token = req.params.token;
+  const { newPassword } = req.body;
+
+  await userService.resetPassword(token, newPassword);
+  return res.status(200).json({
+    status: "sucess",
+    message: "password changed successfully",
+  });
+});
+
 const logoutUser = asyncHandler(async (req, res) => {
   await authService.logout(req.user._id, res);
 
@@ -49,4 +68,4 @@ const logoutUser = asyncHandler(async (req, res) => {
     });
 });
 
-export { registerUser, loginUser, logoutUser };
+export { registerUser, loginUser, logoutUser, forgetPassword, resetPassword };

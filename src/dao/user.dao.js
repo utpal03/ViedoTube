@@ -33,6 +33,14 @@ const isPasswordMatching = async function (user, password) {
   return await bcrypt.compare(password, user.password);
 };
 
+const updatePassword = async (userId, hashedPassword) => {
+  return await User.findByIdAndUpdate(
+    userId,
+    { password: hashedPassword },
+    { new: true }
+  );
+};
+
 export const userDAO = {
   findByEmail,
   updateRefreshToken,
@@ -40,5 +48,6 @@ export const userDAO = {
   create,
   getPublicUserById,
   clearRefreshToken,
-  isPasswordMatching
+  isPasswordMatching,
+  updatePassword
 };
