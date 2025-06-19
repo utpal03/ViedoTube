@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { userService } from "../Service/users.service.js";
 import { authService } from "../Service/auth.service.js";
+import { User } from "../models/users.model.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const user = await userService.register(req.body, req.files);
@@ -80,4 +81,24 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   });
 });
 
-export { registerUser, loginUser, logoutUser, forgetPassword, resetPassword, refreshAccessToken };
+const getChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  const loggedInUserId = req.user?._id;
+
+  const channel = await userService.getChannelInfo(username, loggedInUserId);
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  forgetPassword,
+  resetPassword,
+  refreshAccessToken,
+  getChannelProfile
+};

@@ -127,10 +127,74 @@ const refreshAccessToken = async (token) => {
   return newAccessToken;
 };
 
+const getChannelInfo = async (username, loggedInUserId) => {
+  if (!username?.trim()) {
+    throw new ApiError(400, "Username is missing");
+  }
+  const users = await User.aggregate([
+    {
+      $match: { username: username.toLowerCase() },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: { $size: "$subscribers" },
+        channelsSubscribedToCount: { $size: "$subscribedTo" },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        email: 1,
+        avatar: 1,
+        coverImage: 1,
+        subscribersCount: 1,
+        channelsSubscribedToCount: 1,
+        _id: 1,
+      },
+    },
+  ]);
+
+  if (!users?.length) {
+    throw new ApiError(404, "Channel does not exist");
+  }
+
+  const channel = users[0];
+
+  //this flag checks are we actually viewing someone's profile or not
+
+  if (!channel._id.equals(loggedInUserId)) {
+    const isSubscribed = await mongoose
+      .model("Subscription")
+      .exists({ channel: channel._id, subscriber: loggedInUserId });
+
+    channel.isSubscribed = Boolean(isSubscribed);
+  }
+  delete channel._id; //id not needed in  response
+  return channel;
+};
+
 export const userService = {
   register,
   login,
   forgetPassword,
   resetPassword,
   refreshAccessToken,
+  getChannelInfo,
 };
