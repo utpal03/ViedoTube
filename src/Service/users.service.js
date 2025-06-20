@@ -9,32 +9,39 @@ import { User } from "../models/users.model.js";
 import { refreshtokendao } from "../dao/refreshtoken.dao.js";
 
 const register = async ({ fullname, email, password, username }, files) => {
-  if ([fullname, email, password].some((f) => !f?.trim())) {
-    throw new ApiError(400, "All fields are required");
+  try {
+    if ([fullname, email, password].some((f) => !f?.trim())) {
+      throw new ApiError(400, "All fields are required");
+    }
+
+    const existing = await userDAO.findByEmailOrUsername(email, username);
+    if (existing?.email === email)
+      throw new ApiError(400, "Email already exists");
+    if (existing?.username === username)
+      throw new ApiError(400, "Username already exists");
+
+    const avatarPath = files?.avatar?.[0]?.path;
+    if (!avatarPath) throw new ApiError(400, "Avatar is required");
+
+    const avatar = await cloudinaryupload(avatarPath);
+    const coverImage = await cloudinaryupload(files?.coverImage?.[0]?.path);
+
+    const newUser = await userDAO.create({
+      fullname,
+      email,
+      password,
+      username: username.trim().toLowerCase(),
+      avatar: avatar.url,
+      coverImage: coverImage?.url || "",
+    });
+    return await userDAO.getPublicUserById(newUser._id);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    console.error("Unexpected error in register:", error);
+    throw new ApiError(500, "Something went wrong during registration");
   }
-
-  const existing = await userDAO.findByEmailOrUsername(email, username);
-  if (existing?.email === email)
-    throw new ApiError(400, "Email already exists");
-  if (existing?.username === username)
-    throw new ApiError(400, "Username already exists");
-
-  const avatarPath = files?.avatar?.[0]?.path;
-  if (!avatarPath) throw new ApiError(400, "Avatar is required");
-
-  const avatar = await cloudinaryupload(avatarPath);
-  const coverImage = await cloudinaryupload(files?.coverImage?.[0]?.path);
-
-  const newUser = await userDAO.create({
-    fullname,
-    email,
-    password,
-    username: username.trim().toLowerCase(),
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
-  });
-
-  return await userDAO.getPublicUserById(newUser._id);
 };
 
 const login = async ({ email, password }) => {
