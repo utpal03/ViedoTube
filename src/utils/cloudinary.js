@@ -14,7 +14,7 @@ const cloudinaryupload = async (filePath) => {
     if (!filePath) {
       throw new Error("File path is required for upload.");
     }
-    console.log("api_key", process.env.CLOUDINARY_API_KEY);
+    // console.log("api_key", process.env.CLOUDINARY_API_KEY);
     const result = await cloudinary.uploader.upload(filePath, {
       resource_type: "auto",
     });

@@ -134,7 +134,8 @@ const refreshAccessToken = async (token) => {
   return newAccessToken;
 };
 
-const getChannelInfo = async (username, loggedInUserId) => {
+const getChannelInfo = async (username) => {
+  console.log(username)
   if (!username?.trim()) {
     throw new ApiError(400, "Username is missing");
   }
@@ -183,9 +184,6 @@ const getChannelInfo = async (username, loggedInUserId) => {
   }
 
   const channel = users[0];
-
-  //this flag checks are we actually viewing someone's profile or not
-
   if (!channel._id.equals(loggedInUserId)) {
     const isSubscribed = await mongoose
       .model("Subscription")
