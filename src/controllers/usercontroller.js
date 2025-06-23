@@ -90,6 +90,14 @@ const getChannelInfo = asyncHandler(async (req, res) => {
     );
 });
 
+const updateAvatar = asyncHandler(async (req, res) => {
+  //todo
+});
+
+const updateCoverImage = asyncHandler(async (req, res) => {
+  //todo
+});
+
 // const getWatchHistory = asyncHandler(async (req, res) => {});
 
 export {

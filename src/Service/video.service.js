@@ -41,4 +41,19 @@ const uploadVideo = async ({ duration, description, title, owner }, files) => {
   return newVideo;
 };
 
-export const videoservice = { uploadVideo };
+const getVideoById = async ({ VideoId }) => {
+  if (!VideoId) {
+    throw new ApiError(400, "No video Id provided");
+  }
+  const video = await videodao.getVideoById(VideoId);
+  return video;
+};
+
+const deleteVideo = async ({ videoId }) => {
+  if (!videoId) {
+    throw new ApiError(400, "something went wrong");
+  }
+  return await videodao.deleteVideo(videoId);
+};
+
+export const videoservice = { uploadVideo, deleteVideo, getVideoById };
