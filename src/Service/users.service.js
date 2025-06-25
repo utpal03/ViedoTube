@@ -24,7 +24,11 @@ const register = async ({ fullname, email, password, username }, files) => {
     if (!avatarPath) throw new ApiError(400, "Avatar is required");
 
     const avatar = await cloudinaryupload(avatarPath);
-    const coverImage = await cloudinaryupload(files?.coverImage?.[0]?.path);
+    const coverImagePath = files?.coverImage?.[0]?.path;
+    let coverImage;
+    if (coverImagePath) {
+      await cloudinaryupload(coverImagePath);
+    }
 
     const newUser = await userDAO.create({
       fullname,
@@ -66,6 +70,18 @@ const login = async ({ email, password }) => {
     accessToken,
     refreshToken,
   };
+};
+
+const getSubscribedChannels = async (subscriberId) => {
+  if (!subscriberId) {
+    throw new ApiError(400, "Subscriber ID is required");
+  }
+
+  const subscriptions = await Subscription.find({ subscriber: subscriberId })
+    .populate("channel", "fullname username avatar subscribersCount")
+    .lean();
+  const channels = subscriptions.map((sub) => sub.channel);
+  return channels;
 };
 
 const forgetPassword = async ({ email }) => {
@@ -135,7 +151,7 @@ const refreshAccessToken = async (token) => {
 };
 
 const getChannelInfo = async (username) => {
-  console.log(username)
+  console.log(username);
   if (!username?.trim()) {
     throw new ApiError(400, "Username is missing");
   }

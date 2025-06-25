@@ -6,7 +6,7 @@ const getAllVideos = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const videos = await Video.find().skip(skip).limit(limit);
+    const videos = await Video.find().skip(skip).limit(limit).populate("owner", "_id fullname username avatar");;
     const totalVideos = await Video.countDocuments();
 
     res.status(200).json({

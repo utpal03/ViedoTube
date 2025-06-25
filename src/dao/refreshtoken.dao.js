@@ -14,12 +14,9 @@ const updateRefreshToken = async (userId, refreshToken) => {
 };
 
 const clearRefreshToken = async (userId) => {
-  return await RefreshToken.findOneAndUpdate(
-    { user: userId },
-    { $unset: { token: "" } },
-    { new: true }
-  );
+  return await RefreshToken.findOneAndDelete({ user: userId });
 };
+
 const findRefreshTokenByUserId = async (userId) => {
   return await RefreshToken.findOne({ user: userId });
 };

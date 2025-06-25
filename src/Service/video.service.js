@@ -41,6 +41,22 @@ const uploadVideo = async ({ duration, description, title, owner }, files) => {
   return newVideo;
 };
 
+const getVideosByOwner = async (ownerId, page = 1, limit = 10) => {
+  if (!ownerId) {
+    throw new ApiError(400, "Owner ID is required");
+  }
+  const options = {
+    page,
+    limit,
+    populate: {
+      path: "owner",
+      select: "_id fullname username avatar",
+    },
+  };
+  const videos = await Video.paginate({ owner: ownerId }, options);
+  return videos;
+};
+
 const getVideoById = async ({ VideoId }) => {
   if (!VideoId) {
     throw new ApiError(400, "No video Id provided");

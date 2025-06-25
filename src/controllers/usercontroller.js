@@ -90,6 +90,16 @@ const getChannelInfo = asyncHandler(async (req, res) => {
     );
 });
 
+const getMySubscriptions = asyncHandler(async (req, res) => {
+  const subscriberId = req.user._id;
+  const channels = await userService.getSubscribedChannels(subscriberId);
+  return res.status(200).json({
+    status: "success",
+    message: "User subscriptions fetched successfully",
+    data: { channels },
+  });
+});
+
 const updateAvatar = asyncHandler(async (req, res) => {
   //todo
 });
@@ -108,4 +118,5 @@ export {
   resetPassword,
   refreshAccessToken,
   getChannelInfo,
+  getMySubscriptions
 };
