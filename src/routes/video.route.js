@@ -3,6 +3,7 @@ import {
   uploadVideo,
   getVideosById,
   getLoggedInUserVideos,
+  getVideosByOwnerId
 } from "../controllers/videocontroller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import { verifyJwt } from "../middleware/auth.middleware.js";
@@ -19,5 +20,6 @@ router.route("/uploadVideo").post(
 );
 router.route("/:_id").get(getVideosById);
 router.route("/my-videos").get(verifyJwt, getLoggedInUserVideos);
+router.route("/owner/:ownerId").get(getVideosByOwnerId);
 
 export default router;

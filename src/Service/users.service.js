@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import { User } from "../models/users.model.js";
 import { refreshtokendao } from "../dao/refreshtoken.dao.js";
+import mongoose from "mongoose";
 
 const register = async ({ fullname, email, password, username }, files) => {
   try {
@@ -183,7 +184,7 @@ const getChannelInfo = async (username) => {
     },
     {
       $project: {
-        fullName: 1,
+        fullname: 1,
         username: 1,
         email: 1,
         avatar: 1,
@@ -200,15 +201,60 @@ const getChannelInfo = async (username) => {
   }
 
   const channel = users[0];
-  if (!channel._id.equals(loggedInUserId)) {
-    const isSubscribed = await mongoose
-      .model("Subscription")
-      .exists({ channel: channel._id, subscriber: loggedInUserId });
+  console.log(channel)
+  // console.log(loggedInUserId)
+  // if (!channel._id.equals(loggedInUserId)) {
+  //   const isSubscribed = await mongoose
+  //     .model("Subscription")
+  //     .exists({ channel: channel._id, subscriber: loggedInUserId });
 
-    channel.isSubscribed = Boolean(isSubscribed);
-  }
-  delete channel._id; //id not needed in  response
+  //   channel.isSubscribed = Boolean(isSubscribed);
+  // }
+  // delete channel._id; //id not needed in  response
+  // console.log(channel);
   return channel;
+};
+
+const getWatchHistory = async (userId) => {
+  const user = await User.aggregate([
+    {
+      $match: { _id: new mongoose.Types.ObjectId(userId) },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "Users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullname: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 };
 
 export const userService = {
@@ -218,4 +264,6 @@ export const userService = {
   resetPassword,
   refreshAccessToken,
   getChannelInfo,
+  getSubscribedChannels,
+  getWatchHistory
 };

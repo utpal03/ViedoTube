@@ -1,7 +1,7 @@
 import { cloudinaryupload } from "../utils/cloudinary.js";
 import { ApiError } from "../utils/ApiError.js";
 import { videodao } from "../dao/video.dao.js";
-
+import { Video } from "../models/video.model.js";
 const uploadVideo = async ({ duration, description, title, owner }, files) => {
   if ([duration, description, title].some((f) => !f?.trim())) {
     throw new ApiError(400, "All fields are required");
@@ -41,7 +41,7 @@ const uploadVideo = async ({ duration, description, title, owner }, files) => {
   return newVideo;
 };
 
-const getVideosByOwner = async (ownerId, page = 1, limit = 10) => {
+const getVideosByOwnerId = async (ownerId, page = 1, limit = 10) => {
   if (!ownerId) {
     throw new ApiError(400, "Owner ID is required");
   }
@@ -72,4 +72,9 @@ const deleteVideo = async ({ videoId }) => {
   return await videodao.deleteVideo(videoId);
 };
 
-export const videoservice = { uploadVideo, deleteVideo, getVideoById };
+export const videoservice = {
+  uploadVideo,
+  deleteVideo,
+  getVideoById,
+  getVideosByOwnerId,
+};

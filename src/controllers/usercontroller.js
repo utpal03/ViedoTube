@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { userService } from "../Service/users.service.js";
 import { authService } from "../Service/auth.service.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   const user = await userService.register(req.body, req.files);
@@ -83,10 +84,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const getChannelInfo = asyncHandler(async (req, res) => {
   const { username } = req.params;
   const channel = await userService.getChannelInfo(username);
+  if (!channel || channel.length === 0) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Channel not found",
+    });
+  }
+  // console.log(channel);
   return res
     .status(200)
     .json(
-      new ApiResponse(200, channel[0], "User channel fetched successfully")
+      new ApiResponse(200, channel, "User channel fetched successfully")
     );
 });
 
@@ -108,7 +116,15 @@ const updateCoverImage = asyncHandler(async (req, res) => {
   //todo
 });
 
-// const getWatchHistory = asyncHandler(async (req, res) => {});
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const watchHistory = await userService.getWatchHistory(userId);
+  return res.status(200).json({
+    status: "success",
+    message: "user watched history fetched successfully",
+    data: { watchHistory },
+  });
+});
 
 export {
   registerUser,
@@ -118,5 +134,6 @@ export {
   resetPassword,
   refreshAccessToken,
   getChannelInfo,
-  getMySubscriptions
+  getMySubscriptions,
+  getWatchHistory,
 };
