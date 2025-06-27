@@ -39,6 +39,14 @@ const updatePassword = async (userId, hashedPassword) => {
   );
 };
 
+const incrementSubscribersCount = async (userId) => {
+  return await User.findByIdAndUpdate(
+    userId,
+    { $inc: { subscribersCount: 1 } },
+    { new: true }
+  );
+};
+
 export const userDAO = {
   findByEmail,
   findByEmailOrUsername,
@@ -46,5 +54,6 @@ export const userDAO = {
   getPublicUserById,
   isPasswordMatching,
   updatePassword,
+  incrementSubscribersCount,
   findIdByUsername,
 };

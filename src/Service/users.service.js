@@ -7,6 +7,7 @@ import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
 import { User } from "../models/users.model.js";
 import { refreshtokendao } from "../dao/refreshtoken.dao.js";
+import { Subscription } from "../models/subscription.model.js";
 import mongoose from "mongoose";
 
 const register = async ({ fullname, email, password, username }, files) => {
@@ -67,21 +68,50 @@ const login = async ({ email, password }) => {
 
   return {
     user: publicUser,
-    accessToken,
-    refreshToken,
+    accessToken: accessToken,
+    refreshToken: refreshToken,
+  };
+};
+
+const subscribeToChannel = async (subscriberId, channelId) => {
+  if (!subscriberId || !channelId) {
+    throw new ApiError(400, "Subscriber ID and Channel ID are required");
+  }
+  const existingSubscription = await Subscription.findOne({
+    subscriber: subscriberId,
+    channel: channelId,
+  });
+  if (existingSubscription) {
+    throw new ApiError(400, "Already subscribed to this channel");
+  }
+  const subscription = await Subscription.create({
+    subscriber: subscriberId,
+    channel: channelId,
+  });
+  // await userDAO.incrementSubscribersCount(channelId);
+  return {
+    ...subscription.toObject(),
+    channel: subscription.channel.toString(),
+    subscriber: subscription.subscriber.toString(),
   };
 };
 
 const getSubscribedChannels = async (subscriberId) => {
   if (!subscriberId) {
-    throw new ApiError(400, "Subscriber ID is required");
+    throw new ApiError(400, "No subscriber Id provided");
   }
 
   const subscriptions = await Subscription.find({ subscriber: subscriberId })
-    .populate("channel", "fullname username avatar subscribersCount")
-    .lean();
-  const channels = subscriptions.map((sub) => sub.channel);
-  return channels;
+    .populate("channel", "fullname username avatar subscribersCount") // Populate relevant channel (User) fields
+    .lean(); // Convert to plain JavaScript objects
+
+  // Map subscriptions to include both channel details and subscribedAt date
+  const channelsWithSubscriptionDate = subscriptions.map((sub) => ({
+    ...sub.channel,
+    subscribedAt: sub.subscribedAt,
+  }));
+
+  return channelsWithSubscriptionDate;
 };
 
 const forgetPassword = async ({ email }) => {
@@ -200,7 +230,7 @@ const getChannelInfo = async (username) => {
   }
 
   const channel = users[0];
-  console.log(channel);
+  // console.log(channel);
   // console.log(loggedInUserId)
   // if (!channel._id.equals(loggedInUserId)) {
   //   const isSubscribed = await mongoose
@@ -263,6 +293,7 @@ export const userService = {
   resetPassword,
   refreshAccessToken,
   getChannelInfo,
+  subscribeToChannel,
   getSubscribedChannels,
   getWatchHistory,
 };

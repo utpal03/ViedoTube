@@ -7,6 +7,8 @@ import {
   resetPassword,
   refreshAccessToken,
   getChannelInfo,
+  getCurrentUser,
+  subscribeToChannel,
   getMySubscriptions,
   getWatchHistory,
 } from "../controllers/usercontroller.js";
@@ -28,7 +30,8 @@ router.route("/forget-password").post(forgetPassword);
 router.route("/reset-password/:token").post(resetPassword);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/getChannelInfo/:username").get(getChannelInfo);
-router.route("/subscriptions").get(verifyJwt, getMySubscriptions);
-router.route("/getWatchHistory").get(verifyJwt, getWatchHistory);
-
+router.route("/subscriptions/").get(verifyJwt, getMySubscriptions);
+router.route("/watch-history").get(verifyJwt, getWatchHistory);
+router.route("/current-user").get(verifyJwt, getCurrentUser);
+router.route("/subscribe/:channelId").post(verifyJwt,subscribeToChannel)
 export default router;
