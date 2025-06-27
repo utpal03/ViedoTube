@@ -28,9 +28,8 @@ const register = async ({ fullname, email, password, username }, files) => {
     const coverImagePath = files?.coverImage?.[0]?.path;
     let coverImage;
     if (coverImagePath) {
-      await cloudinaryupload(coverImagePath);
+      coverImage = await cloudinaryupload(coverImagePath);
     }
-
     const newUser = await userDAO.create({
       fullname,
       email,
@@ -201,7 +200,7 @@ const getChannelInfo = async (username) => {
   }
 
   const channel = users[0];
-  console.log(channel)
+  console.log(channel);
   // console.log(loggedInUserId)
   // if (!channel._id.equals(loggedInUserId)) {
   //   const isSubscribed = await mongoose
@@ -265,5 +264,5 @@ export const userService = {
   refreshAccessToken,
   getChannelInfo,
   getSubscribedChannels,
-  getWatchHistory
+  getWatchHistory,
 };
