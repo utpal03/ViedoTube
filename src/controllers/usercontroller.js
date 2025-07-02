@@ -17,13 +17,13 @@ const loginUser = asyncHandler(async (req, res) => {
   const { user, accessToken, refreshToken } = await userService.login(req.body);
   const accessTokenOptions = {
     httpOnly: true,
-    secure: true,
+    secure: false,
     maxAge: 60 * 60 * 1000,
     sameSite: "Lax",
   };
   const refreshTokenOptions = {
     httpOnly: true,
-    secure: true,
+    secure: false,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     sameSite: "Lax",
   };
@@ -63,7 +63,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: true,
+    secure: false,
     sameSite: "Lax",
   };
 
@@ -83,7 +83,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true, // Recommended: Should be true in production with HTTPS
+    secure: false, // Recommended: Should be true in production with HTTPS
     maxAge: 60 * 60 * 1000,
     sameSite: "Lax", // Added: Should match the SameSite used during login
   };
@@ -110,7 +110,8 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const getChannelInfo = asyncHandler(async (req, res) => {
   const { username } = req.params;
-  const channel = await userService.getChannelInfo(username);
+  const viewerId = req.user?._id;
+  const channel = await userService.getChannelInfo(username, viewerId);
   if (!channel || channel.length === 0) {
     return res.status(404).json({
       status: "fail",
@@ -132,6 +133,20 @@ const subscribeToChannel = asyncHandler(async (req, res) => {
   return res.status(200).json({
     status: "success",
     message: "Subscribed to channel successfully",
+    data: { subscription },
+  });
+});
+
+const unsubscribleToChannel = asyncHandler(async (req, res) => {
+  const subscriberId = req.user._id;
+  const channelId = req.params.channelId;
+  const subscription = await userService.unsubscribeToChannel(
+    subscriberId,
+    channelId
+  );
+  return res.status(200).json({
+    status: "success",
+    message: "Unsubscribed from channel successfully",
     data: { subscription },
   });
 });
@@ -174,6 +189,7 @@ export {
   getCurrentUser,
   getChannelInfo,
   subscribeToChannel,
+  unsubscribleToChannel,
   getMySubscriptions,
   getWatchHistory,
 };

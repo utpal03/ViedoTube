@@ -88,24 +88,40 @@ const subscribeToChannel = async (subscriberId, channelId) => {
     subscriber: subscriberId,
     channel: channelId,
   });
-  // await userDAO.incrementSubscribersCount(channelId);
   return {
-    ...subscription.toObject(),
-    channel: subscription.channel.toString(),
-    subscriber: subscription.subscriber.toString(),
+    subscribed: true,
+    message: "Subscribed successfully.",
+    subscription: subscription.toObject(),
   };
 };
 
+const unsubscribeToChannel = async (subscriberId, channelId) => {
+  if (!subscriberId || !channelId) {
+    throw new ApiError(400, "Subscriber ID and Channel ID are required");
+  }
+
+  const subscription = await Subscription.findOneAndDelete({
+    subscriber: subscriberId,
+    channel: channelId,
+  });
+  if (!subscription) {
+    throw new ApiError(404, "you are not subscribed to this channel");
+  }
+  return {
+    unsubscribed: true,
+    message: "Unsubscribed successfully.",
+    subscription: subscription.toObject(),
+  };
+};
 const getSubscribedChannels = async (subscriberId) => {
   if (!subscriberId) {
     throw new ApiError(400, "No subscriber Id provided");
   }
 
   const subscriptions = await Subscription.find({ subscriber: subscriberId })
-    .populate("channel", "fullname username avatar subscribersCount") // Populate relevant channel (User) fields
-    .lean(); // Convert to plain JavaScript objects
+    .populate("channel", "fullname username avatar subscribersCount")
+    .lean();
 
-  // Map subscriptions to include both channel details and subscribedAt date
   const channelsWithSubscriptionDate = subscriptions.map((sub) => ({
     ...sub.channel,
     subscribedAt: sub.subscribedAt,
@@ -116,7 +132,7 @@ const getSubscribedChannels = async (subscriberId) => {
 
 const forgetPassword = async ({ email }) => {
   if (!email) {
-    throw new ApiError("please provide email");
+    throw new ApiError(400, "please provide email");
   }
   const user = await userDAO.findByEmail(email);
   if (!user) {
@@ -163,7 +179,7 @@ const resetPassword = async (token, newPassword) => {
 
 const refreshAccessToken = async (token) => {
   if (!token) {
-    throw ApiError(401, "unauthorized request");
+    throw new ApiError(401, "unauthorized request");
   }
 
   const decodedtoken = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
@@ -180,8 +196,7 @@ const refreshAccessToken = async (token) => {
   return newAccessToken;
 };
 
-const getChannelInfo = async (username) => {
-  console.log(username);
+const getChannelInfo = async (username, viewerId) => {
   if (!username?.trim()) {
     throw new ApiError(400, "Username is missing");
   }
@@ -209,18 +224,27 @@ const getChannelInfo = async (username) => {
       $addFields: {
         subscribersCount: { $size: "$subscribers" },
         channelsSubscribedToCount: { $size: "$subscribedTo" },
+        isSubscribed: {
+          $cond: {
+            if: viewerId,
+            then: {
+              $in: [
+                new mongoose.Types.ObjectId(viewerId),
+                "$subscribers.subscriber",
+              ],
+            },
+            else: false,
+          },
+        },
       },
     },
     {
       $project: {
-        fullname: 1,
-        username: 1,
-        email: 1,
-        avatar: 1,
-        coverImage: 1,
-        subscribersCount: 1,
-        channelsSubscribedToCount: 1,
-        _id: 1,
+        subscribers: 0,
+        subscribedTo: 0,
+        password: 0,
+        refreshToken: 0,
+        emailVerificationToken: 0,
       },
     },
   ]);
@@ -228,19 +252,7 @@ const getChannelInfo = async (username) => {
   if (!users?.length) {
     throw new ApiError(404, "Channel does not exist");
   }
-
   const channel = users[0];
-  // console.log(channel);
-  // console.log(loggedInUserId)
-  // if (!channel._id.equals(loggedInUserId)) {
-  //   const isSubscribed = await mongoose
-  //     .model("Subscription")
-  //     .exists({ channel: channel._id, subscriber: loggedInUserId });
-
-  //   channel.isSubscribed = Boolean(isSubscribed);
-  // }
-  // delete channel._id; //id not needed in  response
-  // console.log(channel);
   return channel;
 };
 
@@ -284,6 +296,10 @@ const getWatchHistory = async (userId) => {
       },
     },
   ]);
+  if (!user.length) {
+    throw new ApiError(404, "User not found or no watch history");
+  }
+  return user[0].watchHistory;
 };
 
 export const userService = {
@@ -294,6 +310,7 @@ export const userService = {
   refreshAccessToken,
   getChannelInfo,
   subscribeToChannel,
+  unsubscribeToChannel,
   getSubscribedChannels,
   getWatchHistory,
 };
